@@ -38,6 +38,8 @@ class Library:
 # Example Usage:
 library = Library()
 
+library.display_books()
+
 library.add_book("The Great Gatsby", "F. Scott Fitzgerald", "Fiction")
 library.add_book("To Kill a Mockingbird", "Harper Lee", "Drama")
 
