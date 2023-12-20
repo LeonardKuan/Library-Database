@@ -93,12 +93,12 @@ class LibraryGUI:
         title = self.title_entry.get()
         author = self.author_entry.get()
         genre = self.genre_entry.get()
-        
-        title = self.clean_input(title)
-        author = self.clean_input(author)
-        genre = self.clean_input(genre)
-
+    
         if title and author and genre:
+            title = self.clean_input(title)
+            author = self.clean_input(author)
+            genre = self.clean_input(genre)
+            
             self.library.add_book(title, author, genre)
             messagebox.showinfo("Success", f'Book "{title}" added to the library.')
         else:
@@ -108,13 +108,14 @@ class LibraryGUI:
         title = self.title_entry.get()
         author = self.author_entry.get()
         genre = self.genre_entry.get()
-        
-        title = self.clean_input(title)
-        author = self.clean_input(author)
-        genre = self.clean_input(genre)
 
         if title and author and genre:
+            title = self.clean_input(title)
+            author = self.clean_input(author)
+            genre = self.clean_input(genre)
+            
             result = self.library.remove_book(title, author, genre)
+            
             if result == -1:
                 messagebox.showwarning("Warning", "No matching book exists. Please enter the correct title, author, and genre of the book to remove.")
             elif result == -2:
@@ -144,7 +145,7 @@ class LibraryGUI:
         if self.library.books:
             count = 0
             for book in self.library.books:
-                tk.Label(root, text=f'Title: {book["title"]}, Author: {book["author"]}, Genre: {book["genre"]}, Count: {book["count"]}').grid(row=12 + count, column=1, columnspan=3, padx=0, pady=10, sticky=tk.W)
+                tk.Label(root, text=f'Title: {book["title"]}, Author: {book["author"]}, Genre: {book["genre"]}, Count: {book["count"]}').grid(row=12 + count, column=1, columnspan=10, padx=0, pady=10, sticky=tk.W)
                 count += 1
         else:
             messagebox.showwarning("Warning", "The library is empty.")
@@ -153,7 +154,7 @@ class LibraryGUI:
         # Get all widgets in the grid
         widgets = root.grid_slaves()
 
-        # Destroy widgets below row 4
+        # Destroy widgets below row 11
         for widget in widgets:
             widget_row = widget.grid_info()["row"]
             if widget_row > 11:
