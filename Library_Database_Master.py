@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import *
 from tkinter import messagebox
 import random
 import string
@@ -10,33 +11,53 @@ class Library:
     def add_book(self, title, author, genre):
         if self.books:
             for k in range(len(self.books)):
+                # If the book is already in the library
                 if title == self.books[k]["title"] and author == self.books[k]["author"] and genre == self.books[k]["genre"]:
                     self.books[k]["count"] += 1
                     break
+                # If the book is new, i.e. not in the library
                 if k == len(self.books) - 1:
-                    self.books.append({"title": title, "author": author, "genre": genre, "count": 1})
+                    unique_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(9))
+                    self.books.append({"id": unique_id, "title": title, "author": author, "genre": genre, "count": 1})
         else:
-            self.books.append({"title": title, "author": author, "genre": genre, "count": 1})
+            # If the library is empty, just add the book, which will be the first
+            unique_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(9))
+            self.books.append({"id": unique_id, "title": title, "author": author, "genre": genre, "count": 1})
 
     def remove_book(self, title, author, genre):
         if self.books:
             for k in range(len(self.books)):
+                # If the book is already in the library
                 if title == self.books[k]["title"] and author == self.books[k]["author"] and genre == self.books[k]["genre"]:
+                    # If the book count is exactly 1, simply remove it from the library
                     if self.books[k]["count"] == 1:
                         del self.books[k]
+                    # If the book count is > 1, reduce the count by 1
                     else:
                         self.books[k]["count"] -= 1
                     return
+                # If no such book is found in the library, return an error code as you can't remove a non-existent book
                 if k == len(self.books) - 1:
                     return -1
+        # If the library is empty, return an error code as you can't remove a non-existent book
         else:
             return -2
 
-    def update_book(self, title, author, genre):
-        for book in self.books:
-            if book["title"] == title:
-                book["author"] = author
-                book["genre"] = genre
+    def update_book(self, unique_id, title, author, genre):
+        if self.books:
+            for k in range(len(self.books)):
+                # If the book is in the library, update it
+                if self.books[k]["id"] == unique_id:
+                    self.books[k]["title"] = title
+                    self.books[k]["author"] = author
+                    self.books[k]["genre"] = genre
+                    return
+                # If no such book is found in the library, return an error as you can't update a non-existent book
+                if k == len(self.books) - 1:
+                    return -1
+        # If the library is empty, return an error code as can't update a non-existent book
+        else:
+            return -2
 
 class LibraryGUI:
     def __init__(self, root):
@@ -116,40 +137,64 @@ class LibraryGUI:
             
             result = self.library.remove_book(title, author, genre)
             
+            # If no such book is found in the library
             if result == -1:
                 messagebox.showwarning("Warning", "No matching book exists. Please enter the correct title, author, and genre of the book to remove.")
+            # If the library is empty
             elif result == -2:
                 messagebox.showwarning("Warning", "The library is empty.")
+            # Successfully removed
             else:
                 messagebox.showinfo("Success", f'Book "{title}" removed from the library.')
         else:
             messagebox.showwarning("Warning", "Please enter the title, author, and genre of the book to remove.")
 
     def update_book(self):
+        unique_id = self.id_entry.get()
         title = self.title_entry.get()
         author = self.author_entry.get()
         genre = self.genre_entry.get()
         
-        title = self.clean_input(title)
-        author = self.clean_input(author)
-        genre = self.clean_input(genre)
+        if unique_id and title and author and genre:
+            unique_id = self.clean_input(unique_id)
+            title = self.clean_input(title)
+            author = self.clean_input(author)
+            genre = self.clean_input(genre)
 
-        if title and author and genre:
-            self.library.update_book(title, author, genre)
-            messagebox.showinfo("Success", f'Book "{title}" updated.')
+            result = self.library.update_book(unique_id, title, author, genre)
+            
+            # If no such book is found in the library
+            if result == -1:
+                messagebox.showwarning("Warning", "No matching book exists. Please enter the correct unique ID of the book to update.")
+            # If the library is empty
+            elif result == -2:
+                messagebox.showwarning("Warning", "The library is empty.")
+            # Successfully updated
+            else:
+                messagebox.showinfo("Success", f'Book "{title}" updated within the library.')
         else:
-            messagebox.showwarning("Warning", "Please enter the title of the book to update.")
+            messagebox.showwarning("Warning", "Please enter the unique ID of the book to be updated, followed by the new title, author, and genre.")
 
     def display_books(self):
         self.destroy_widgets(root)
+        
+        book_list = [["Unique ID", "Title", "Author", "Genre", "Quantity"]]
         if self.library.books:
-            count = 0
-            for book in self.library.books:
-                tk.Label(root, text=f'Title: {book["title"]}, Author: {book["author"]}, Genre: {book["genre"]}, Count: {book["count"]}').grid(row=12 + count, column=1, columnspan=10, padx=0, pady=10, sticky=tk.W)
-                count += 1
+            for k in range(len(self.library.books)):
+                book_list.append([self.library.books[k]["id"], self.library.books[k]["title"], self.library.books[k]["author"], self.library.books[k]["genre"], self.library.books[k]["count"]])
+             # i is # of rows
+            for i in range(len(book_list)):
+                # k is # of columns
+                for k in range(5):
+                    if i == 0:
+                        self = Entry(root, width=20, fg='black', font=('Arial', 10, 'bold'))
+                    else:
+                        self = Entry(root, width=20, fg='black', font=('Arial', 10))
+                    self.grid(row=i+12, column=k, columnspan=2)
+                    self.insert(END, book_list[i][k])
         else:
             messagebox.showwarning("Warning", "The library is empty.")
-            
+        
     def destroy_widgets(self, root):
         # Get all widgets in the grid
         widgets = root.grid_slaves()
