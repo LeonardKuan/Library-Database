@@ -4,9 +4,12 @@ from tkinter import messagebox
 import random
 import string
 
+# Creating class for Books so that other Library and LibraryGUI classes can interact with class Books
+
 class Library:
     def __init__(self):
         self.books = []
+        # self.books = {"id": unique_id: {"title": title, "author": author, "genre": genre, "count": 1}}
 
     def add_book(self, title, author, genre):
         if self.books:
