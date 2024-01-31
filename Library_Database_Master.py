@@ -8,60 +8,61 @@ import string
 
 class Library:
     def __init__(self):
-        self.books = []
-        # self.books = {"id": unique_id: {"title": title, "author": author, "genre": genre, "count": 1}}
-
+        self.books = {}
+        
     def add_book(self, title, author, genre):
         if self.books:
-            for k in range(len(self.books)):
+            book_composition = self.books.values()
+            for index, book in enumerate(book_composition):
                 # If the book is already in the library
-                if title == self.books[k]["title"] and author == self.books[k]["author"] and genre == self.books[k]["genre"]:
-                    self.books[k]["count"] += 1
+                if title == book["title"] and author == book["author"] and genre == book["genre"]:
+                    book_id = list(self.books.keys())[list(self.books.values()).index(book)]
+                    self.books[book_id]["count"] += 1
                     break
                 # If the book is new, i.e. not in the library
-                if k == len(self.books) - 1:
+                if index == len(book_composition) - 1:
                     unique_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(9))
-                    self.books.append({"id": unique_id, "title": title, "author": author, "genre": genre, "count": 1})
+                    self.books[unique_id] = {"title": title, "author": author, "genre": genre, "count": 1}
+                    break
         else:
             # If the library is empty, just add the book, which will be the first
             unique_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(9))
-            self.books.append({"id": unique_id, "title": title, "author": author, "genre": genre, "count": 1})
-
-    def remove_book(self, title, author, genre):
+            self.books[unique_id] = {"title": title, "author": author, "genre": genre, "count": 1}
+    
+    def remove_book(self, unique_id):
         if self.books:
-            for k in range(len(self.books)):
-                # If the book is already in the library
-                if title == self.books[k]["title"] and author == self.books[k]["author"] and genre == self.books[k]["genre"]:
-                    # If the book count is exactly 1, simply remove it from the library
-                    if self.books[k]["count"] == 1:
-                        del self.books[k]
-                    # If the book count is > 1, reduce the count by 1
-                    else:
-                        self.books[k]["count"] -= 1
-                    return
-                # If no such book is found in the library, return an error code as you can't remove a non-existent book
-                if k == len(self.books) - 1:
-                    return -1
+            # If the book is already in the library
+            if unique_id in self.books:
+                # If the book count is exactly 1, simply remove it from the library
+                duplicate_books = self.books.copy()
+                if self.books[unique_id]["count"] == 1:
+                    del self.books[unique_id]
+                # If the book count is > 1, reduce the count by 1
+                else:
+                    self.books[unique_id]["count"] -= 1
+                return (0, duplicate_books[unique_id]["title"])
+            # If no such book is found in the library, return an error code as you can't remove a non-existent book
+            else:
+                return (-1, "")
         # If the library is empty, return an error code as you can't remove a non-existent book
         else:
-            return -2
-
+            return (-2, "")
+        
     def update_book(self, unique_id, title, author, genre):
         if self.books:
-            for k in range(len(self.books)):
-                # If the book is in the library, update it
-                if self.books[k]["id"] == unique_id:
-                    self.books[k]["title"] = title
-                    self.books[k]["author"] = author
-                    self.books[k]["genre"] = genre
-                    return
-                # If no such book is found in the library, return an error as you can't update a non-existent book
-                if k == len(self.books) - 1:
-                    return -1
+            # If the book is in the library, update it
+            if unique_id in self.books:
+                self.books[unique_id]["title"] = title
+                self.books[unique_id]["author"] = author
+                self.books[unique_id]["genre"] = genre
+                return (0, title)
+            # If no such book is found in the library, return an error as you can't update a non-existent book
+            else:
+                return (-1, "")
         # If the library is empty, return an error code as can't update a non-existent book
         else:
-            return -2
-
+            return (-2, "")
+        
 class LibraryGUI:
     def __init__(self, root):
         self.root = root
@@ -129,28 +130,23 @@ class LibraryGUI:
             messagebox.showwarning("Warning", "Please enter all book details.")
 
     def remove_book(self):
-        title = self.title_entry.get()
-        author = self.author_entry.get()
-        genre = self.genre_entry.get()
+        unique_id = self.id_entry.get()
 
-        if title and author and genre:
-            title = self.clean_input(title)
-            author = self.clean_input(author)
-            genre = self.clean_input(genre)
-            
-            result = self.library.remove_book(title, author, genre)
+        if unique_id:
+            unique_id = self.clean_input(unique_id)
+            outcome, removed_book = self.library.remove_book(unique_id)
             
             # If no such book is found in the library
-            if result == -1:
-                messagebox.showwarning("Warning", "No matching book exists. Please enter the correct title, author, and genre of the book to remove.")
+            if outcome == -1:
+                messagebox.showwarning("Warning", "No matching book exists. Please enter the correct unique ID of the book to remove.")
             # If the library is empty
-            elif result == -2:
+            elif outcome == -2:
                 messagebox.showwarning("Warning", "The library is empty.")
             # Successfully removed
             else:
-                messagebox.showinfo("Success", f'Book "{title}" removed from the library.')
+                messagebox.showinfo("Success", f'Book "{removed_book}" removed from the library.')
         else:
-            messagebox.showwarning("Warning", "Please enter the title, author, and genre of the book to remove.")
+            messagebox.showwarning("Warning", "Please enter the correct unique ID of the book to remove.")
 
     def update_book(self):
         unique_id = self.id_entry.get()
@@ -164,27 +160,27 @@ class LibraryGUI:
             author = self.clean_input(author)
             genre = self.clean_input(genre)
 
-            result = self.library.update_book(unique_id, title, author, genre)
+            outcome, updated_book = self.library.update_book(unique_id, title, author, genre)
             
             # If no such book is found in the library
-            if result == -1:
+            if outcome == -1:
                 messagebox.showwarning("Warning", "No matching book exists. Please enter the correct unique ID of the book to update.")
             # If the library is empty
-            elif result == -2:
+            elif outcome == -2:
                 messagebox.showwarning("Warning", "The library is empty.")
             # Successfully updated
             else:
-                messagebox.showinfo("Success", f'Book "{title}" updated within the library.')
+                messagebox.showinfo("Success", f'Book "{updated_book}" updated within the library.')
         else:
             messagebox.showwarning("Warning", "Please enter the unique ID of the book to be updated, followed by the new title, author, and genre.")
 
     def display_books(self):
         self.destroy_widgets(root)
-        
+
         book_list = [["Unique ID", "Title", "Author", "Genre", "Quantity"]]
         if self.library.books:
-            for k in range(len(self.library.books)):
-                book_list.append([self.library.books[k]["id"], self.library.books[k]["title"], self.library.books[k]["author"], self.library.books[k]["genre"], self.library.books[k]["count"]])
+            for identifier in self.library.books:
+                book_list.append([identifier, self.library.books[identifier]["title"], self.library.books[identifier]["author"], self.library.books[identifier]["genre"], self.library.books[identifier]["count"]])
              # i is # of rows
             for i in range(len(book_list)):
                 # k is # of columns
