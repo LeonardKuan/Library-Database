@@ -9,24 +9,37 @@ import string
 class Library:
     def __init__(self):
         self.books = {}
-        
+
     def add_book(self, title, author, genre):
         if self.books:
-            book_composition = self.books.values()
-            for index, book in enumerate(book_composition):
-                # If the book is already in the library
-                if title == book["title"] and author == book["author"] and genre == book["genre"]:
-                    book_id = list(self.books.keys())[list(self.books.values()).index(book)]
-                    self.books[book_id]["count"] += 1
-                    break
-                # If the book is new, i.e. not in the library
-                if index == len(book_composition) - 1:
-                    unique_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(9))
-                    self.books[unique_id] = {"title": title, "author": author, "genre": genre, "count": 1}
-                    break
+            counter = 1
+            check_id = ''.join(title.split())[:3].upper() + ''.join(author.split())[:2].upper() + ''.join(genre.split())[:2].upper() + str(counter)
+            # If the ID of the book is already in the library
+            if check_id in self.books:
+                # If the attributes of the book matches
+                if title == self.books[check_id]["title"] and author == self.books[check_id]["author"] and genre == self.books[check_id]["genre"]:
+                    self.books[check_id]["count"] += 1
+                else:
+                    # While the attributes of the book do not match, iteratively increase counter and check the attributes again
+                    while title != self.books[check_id]["title"] or author != self.books[check_id]["author"] or genre != self.books[check_id]["genre"]:
+                        new_book_ind = 0
+                        counter += 1
+                        check_id = ''.join(title.split())[:3].upper() + ''.join(author.split())[:2].upper() + ''.join(genre.split())[:2].upper() + str(counter)
+                        # If the ID of the book is not in the library, add the book
+                        if check_id not in self.books:
+                            unique_id = ''.join(title.split())[:3].upper() + ''.join(author.split())[:2].upper() + ''.join(genre.split())[:2].upper() + str(counter)
+                            self.books[unique_id] = {"title": title, "author": author, "genre": genre, "count": 1}
+                            new_book_ind = 1
+                    # Catch edge case if the ID of the book exists, and the attributes match
+                    if new_book_ind != 1:
+                        self.books[check_id]["count"] += 1
+            # If the library is empty, just add the book, which will be the first
+            else:
+                unique_id = ''.join(title.split())[:3].upper() + ''.join(author.split())[:2].upper() + ''.join(genre.split())[:2].upper() + str(counter)
+                self.books[unique_id] = {"title": title, "author": author, "genre": genre, "count": 1}
         else:
             # If the library is empty, just add the book, which will be the first
-            unique_id = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(9))
+            unique_id = ''.join(title.split())[:3].upper() + ''.join(author.split())[:2].upper() + ''.join(genre.split())[:2].upper() + "1"
             self.books[unique_id] = {"title": title, "author": author, "genre": genre, "count": 1}
     
     def remove_book(self, unique_id):
